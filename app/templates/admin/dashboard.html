@@ -1,0 +1,103 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}Dashboard{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Admin Dashboard</h1>
+    <p>Welcome back, {{ current_user.fullname }}. Here's your overview.</p>
+  </div>
+  <div class="d-flex gap-8">
+    <a href="{{ url_for('admin.add_room') }}" class="btn btn-outline"><i class="fas fa-plus"></i> Add Room</a>
+    <a href="{{ url_for('admin.reservations') }}" class="btn btn-gold"><i class="fas fa-calendar-check"></i> Reservations</a>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="stats-grid">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+    <div class="stat-value">{{ total }}</div>
+    <div class="stat-label">Total Bookings</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value">{{ confirmed }}</div>
+    <div class="stat-label">Confirmed</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    <div class="stat-value">{{ pending }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+  <div class="stat-card red">
+    <div class="stat-icon"><i class="fas fa-times-circle"></i></div>
+    <div class="stat-value">{{ cancelled }}</div>
+    <div class="stat-label">Cancelled</div>
+  </div>
+  <div class="stat-card blue">
+    <div class="stat-icon"><i class="fas fa-door-open"></i></div>
+    <div class="stat-value">{{ available_rooms }}/{{ total_rooms }}</div>
+    <div class="stat-label">Rooms Available</div>
+  </div>
+</div>
+
+<!-- Recent Reservations -->
+<div class="card">
+  <div class="card-header">
+    <div class="card-title"><i class="fas fa-list" style="color:var(--gold);margin-right:10px;"></i>Recent Reservations</div>
+    <a href="{{ url_for('admin.reservations') }}" class="btn btn-outline btn-sm">View All</a>
+  </div>
+  {% if recent_reservations %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Guest</th>
+          <th>Room</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in recent_reservations %}
+        <tr>
+          <td><strong style="color:var(--gold-dark);">{{ res.booking_reference() }}</strong></td>
+          <td>
+            <div style="font-weight:600;">{{ res.fullname }}</div>
+            <div style="font-size:12px;color:var(--stone);">{{ res.email }}</div>
+          </td>
+          <td>{{ res.room.room_name }}</td>
+          <td>{{ res.check_in.strftime('%b %d, %Y') }}</td>
+          <td>{{ res.check_out.strftime('%b %d, %Y') }}</td>
+          <td><strong>₱{{ "%.2f"|format(res.total_price()) }}</strong></td>
+          <td><span class="badge badge-{{ res.status }}">{{ res.status }}</span></td>
+          <td>
+            <div class="d-flex gap-8">
+              <a href="{{ url_for('admin.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-sm btn-icon" title="View"><i class="fas fa-eye"></i></a>
+              {% if res.status == 'pending' %}
+              <form method="POST" action="{{ url_for('admin.confirm_reservation', res_id=res.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-success btn-sm btn-icon" title="Confirm"><i class="fas fa-check"></i></button>
+              </form>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-calendar-times"></i>
+    <h3>No Reservations Yet</h3>
+    <p>Reservations will appear here as customers book rooms.</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}{{ res.booking_reference() }}{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('customer.my_reservations') }}">My Reservations</a>
+      <span class="sep">/</span>
+      <span>{{ res.booking_reference() }}</span>
+    </div>
+    <h1>Reservation Details</h1>
+  </div>
+  <div class="d-flex gap-8">
+    {% if res.status != 'cancelled' %}
+    <a href="{{ url_for('customer.edit_reservation', res_id=res.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Edit</a>
+    <form method="POST" action="{{ url_for('customer.cancel_reservation', res_id=res.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger" data-confirm="Are you sure you want to cancel this reservation?"><i class="fas fa-ban"></i> Cancel</button>
+    </form>
+    {% endif %}
+    <button class="btn btn-outline" id="printReceipt"><i class="fas fa-print"></i> Print</button>
+  </div>
+</div>
+
+<div style="max-width:700px;margin:0 auto;">
+  <div class="receipt-card">
+    <div class="receipt-header">
+      <div class="logo">Luxe<span>Stay</span></div>
+      <div class="booking-ref">Booking Reference: <span>{{ res.booking_reference() }}</span></div>
+    </div>
+    <div style="text-align:center;padding:14px;
+      background:{{ 'var(--success-light)' if res.status == 'confirmed' else ('var(--warning-light)' if res.status == 'pending' else 'var(--danger-light)') }};
+      display:flex;align-items:center;justify-content:center;gap:10px;">
+      <i class="fas {{ 'fa-check-circle' if res.status == 'confirmed' else ('fa-clock' if res.status == 'pending' else 'fa-times-circle') }}"
+        style="color:{{ 'var(--success)' if res.status == 'confirmed' else ('var(--warning)' if res.status == 'pending' else 'var(--danger)') }};"></i>
+      <span style="font-size:14px;font-weight:600;color:{{ 'var(--success)' if res.status == 'confirmed' else ('var(--warning)' if res.status == 'pending' else 'var(--danger)') }};">
+        Status: {{ res.status|capitalize }}
+      </span>
+    </div>
+    <div class="receipt-body">
+      <div class="receipt-row"><div class="receipt-label">Guest Name</div><div class="receipt-value">{{ res.fullname }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Email</div><div class="receipt-value">{{ res.email }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Phone</div><div class="receipt-value">{{ res.phone }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Room</div><div class="receipt-value">{{ res.room.room_name }} — Room {{ res.room.room_number }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Room Type</div><div class="receipt-value">{{ res.room.room_type }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Check-in</div><div class="receipt-value">{{ res.check_in.strftime('%A, %B %d, %Y') }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Check-out</div><div class="receipt-value">{{ res.check_out.strftime('%A, %B %d, %Y') }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Duration</div><div class="receipt-value">{{ res.nights() }} night{{ 's' if res.nights() != 1 }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Guests</div><div class="receipt-value">{{ res.guests }} person{{ 's' if res.guests != 1 }}</div></div>
+      {% if res.arrival_time %}<div class="receipt-row"><div class="receipt-label">Arrival Time</div><div class="receipt-value">{{ res.arrival_time }}</div></div>{% endif %}
+      {% if res.special_requests %}<div class="receipt-row"><div class="receipt-label">Special Requests</div><div class="receipt-value">{{ res.special_requests }}</div></div>{% endif %}
+      <div class="receipt-row"><div class="receipt-label">Price Per Night</div><div class="receipt-value">₱{{ "%.2f"|format(res.room.price) }}</div></div>
+      <div class="receipt-row"><div class="receipt-label">Booked On</div><div class="receipt-value">{{ res.created_at.strftime('%B %d, %Y at %I:%M %p') }}</div></div>
+      <div class="receipt-total">
+        <div class="label">Total Amount</div>
+        <div class="amount">₱{{ "%.2f"|format(res.total_price()) }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+@media print {
+  .sidebar, .topbar, .page-header, .d-flex { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+}
+</style>
+{% endblock %}

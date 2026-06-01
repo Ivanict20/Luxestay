@@ -1,0 +1,101 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}Edit Reservation{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('customer.my_reservations') }}">My Reservations</a>
+      <span class="sep">/</span>
+      <a href="{{ url_for('customer.reservation_detail', res_id=res.id) }}">{{ res.booking_reference() }}</a>
+      <span class="sep">/</span><span>Edit</span>
+    </div>
+    <h1>Edit Reservation</h1>
+  </div>
+  <a href="{{ url_for('customer.reservation_detail', res_id=res.id) }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 320px;gap:24px;align-items:start;max-width:900px;">
+  <div class="card">
+    <div class="card-header"><div class="card-title">Update Your Booking</div></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('customer.edit_reservation', res_id=res.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="room_id_hidden" value="{{ res.room_id }}">
+        <input type="hidden" id="exclude_reservation_id" value="{{ res.id }}">
+        <input type="hidden" id="price_per_night" value="{{ res.room.price }}">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="fullname" class="form-control" value="{{ res.fullname }}" required>
+          </div>
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" name="phone" class="form-control" value="{{ res.phone }}" required>
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Check-in Date *</label>
+            <input type="date" name="check_in" id="check_in" class="form-control" value="{{ res.check_in.isoformat() }}" required>
+          </div>
+          <div class="form-group">
+            <label>Check-out Date *</label>
+            <input type="date" name="check_out" id="check_out" class="form-control" value="{{ res.check_out.isoformat() }}" required>
+          </div>
+        </div>
+
+        <div id="availCheck" class="avail-check" style="margin-bottom:12px;"></div>
+
+        <div style="background:var(--cream);border-radius:var(--radius-sm);padding:14px 18px;margin-bottom:16px;display:flex;justify-content:space-between;">
+          <div><div style="font-size:12px;color:var(--stone);">Duration</div><div id="nightsDisplay" style="font-weight:700;">—</div></div>
+          <div style="text-align:right;"><div style="font-size:12px;color:var(--stone);">Estimated Total</div><div id="totalDisplay" style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold-dark);">—</div></div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Arrival Time</label>
+            <input type="time" name="arrival_time" class="form-control" value="{{ res.arrival_time or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Guests</label>
+            <input type="number" name="guests" class="form-control" min="1" max="20" value="{{ res.guests }}">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Special Requests</label>
+          <textarea name="special_requests" class="form-control">{{ res.special_requests or '' }}</textarea>
+        </div>
+
+        <div class="warn-box mb-16"><i class="fas fa-exclamation-triangle"></i> Editing will reset your booking to <strong>Pending</strong> status for re-confirmation.</div>
+
+        <div class="d-flex gap-12">
+          <button type="submit" class="btn btn-gold btn-lg"><i class="fas fa-save"></i> Save Changes</button>
+          <a href="{{ url_for('customer.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-lg">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Room summary -->
+  <div class="card" style="position:sticky;top:80px;">
+    <div style="height:160px;overflow:hidden;">
+      <img src="{{ url_for('static', filename='uploads/rooms/' + res.room.image) }}"
+        alt="{{ res.room.room_name }}" style="width:100%;height:100%;object-fit:cover;"
+        onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80'">
+    </div>
+    <div class="card-body">
+      <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--stone);margin-bottom:4px;">{{ res.room.room_type }}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;margin-bottom:4px;">{{ res.room.room_name }}</div>
+      <div style="font-size:13px;color:var(--stone);">Room {{ res.room.room_number }}</div>
+      <div class="room-card-price mt-12">
+        <span class="room-price-amount">₱{{ "%.2f"|format(res.room.price) }}</span>
+        <span class="room-price-per">/night</span>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

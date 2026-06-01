@@ -1,0 +1,97 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}Reservations{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>All Reservations</h1>
+    <p>{{ reservations|length }} reservation{{ 's' if reservations|length != 1 }} found</p>
+  </div>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-tabs">
+    <a href="{{ url_for('admin.reservations') }}" class="filter-tab {% if not status_filter %}active{% endif %}">All</a>
+    <a href="{{ url_for('admin.reservations', status='pending') }}" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+    <a href="{{ url_for('admin.reservations', status='confirmed') }}" class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+    <a href="{{ url_for('admin.reservations', status='cancelled') }}" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+  </div>
+  <form method="GET" class="search-bar" style="margin-left:auto;">
+    <i class="fas fa-search"></i>
+    <input type="text" name="search" placeholder="Search by name, email, phone..." value="{{ search }}">
+    {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+  </form>
+</div>
+
+<div class="card">
+  {% if reservations %}
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Guest</th>
+          <th>Room</th>
+          <th>Check-in</th>
+          <th>Check-out</th>
+          <th>Nights</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Booked On</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in reservations %}
+        <tr>
+          <td><strong style="color:var(--gold-dark);">{{ res.booking_reference() }}</strong></td>
+          <td>
+            <div style="font-weight:600;">{{ res.fullname }}</div>
+            <div style="font-size:12px;color:var(--stone);">{{ res.phone }}</div>
+          </td>
+          <td>
+            <div style="font-weight:500;">{{ res.room.room_name }}</div>
+            <div style="font-size:12px;color:var(--stone);">Rm. {{ res.room.room_number }}</div>
+          </td>
+          <td>{{ res.check_in.strftime('%b %d, %Y') }}</td>
+          <td>{{ res.check_out.strftime('%b %d, %Y') }}</td>
+          <td>{{ res.nights() }}</td>
+          <td><strong>₱{{ "%.2f"|format(res.total_price()) }}</strong></td>
+          <td><span class="badge badge-{{ res.status }}">{{ res.status }}</span></td>
+          <td style="font-size:12px;color:var(--stone);">{{ res.created_at.strftime('%b %d, %Y') }}</td>
+          <td>
+            <div class="d-flex gap-8">
+              <a href="{{ url_for('admin.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-sm btn-icon" title="View Details"><i class="fas fa-eye"></i></a>
+              <a href="{{ url_for('admin.edit_reservation', res_id=res.id) }}" class="btn btn-outline btn-sm btn-icon" title="Edit"><i class="fas fa-edit"></i></a>
+              {% if res.status == 'pending' %}
+              <form method="POST" action="{{ url_for('admin.confirm_reservation', res_id=res.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-success btn-sm btn-icon" title="Confirm"><i class="fas fa-check"></i></button>
+              </form>
+              {% endif %}
+              {% if res.status != 'cancelled' %}
+              <form method="POST" action="{{ url_for('admin.cancel_reservation', res_id=res.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-warning btn-sm btn-icon" title="Cancel" data-confirm="Cancel this reservation?"><i class="fas fa-ban"></i></button>
+              </form>
+              {% endif %}
+              <form method="POST" action="{{ url_for('admin.delete_reservation', res_id=res.id) }}" style="display:inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button class="btn btn-danger btn-sm btn-icon" title="Delete" data-confirm="Permanently delete this reservation?"><i class="fas fa-trash"></i></button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <i class="fas fa-calendar-times"></i>
+    <h3>No Reservations Found</h3>
+    <p>{% if search or status_filter %}Try adjusting your filters.{% else %}Reservations will appear here when customers book rooms.{% endif %}</p>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

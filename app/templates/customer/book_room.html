@@ -1,0 +1,122 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}Book {{ room.room_name }}{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('customer.browse_rooms') }}">Rooms</a>
+      <span class="sep">/</span>
+      <a href="{{ url_for('customer.room_detail', room_id=room.id) }}">{{ room.room_name }}</a>
+      <span class="sep">/</span><span>Book</span>
+    </div>
+    <h1>Complete Your Reservation</h1>
+  </div>
+  <a href="{{ url_for('customer.room_detail', room_id=room.id) }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 340px;gap:28px;align-items:start;">
+  <div class="card">
+    <div class="card-header"><div class="card-title"><i class="fas fa-user" style="color:var(--gold);margin-right:10px;"></i>Guest Information</div></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('customer.book_room', room_id=room.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="room_id_hidden" value="{{ room.id }}">
+        <input type="hidden" id="price_per_night" value="{{ room.price }}">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="fullname" class="form-control" value="{{ user.fullname }}" required>
+          </div>
+          <div class="form-group">
+            <label>Contact Number *</label>
+            <input type="tel" name="phone" class="form-control" value="{{ user.phone or '' }}" required placeholder="+63 9XX XXX XXXX">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address *</label>
+          <input type="email" name="email" class="form-control" value="{{ user.email }}" required>
+        </div>
+
+        <hr class="divider">
+        <div class="section-title" style="font-size:18px;margin-bottom:20px;">Stay Details</div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Check-in Date *</label>
+            <input type="date" name="check_in" id="check_in" class="form-control" min="{{ today }}" required>
+          </div>
+          <div class="form-group">
+            <label>Check-out Date *</label>
+            <input type="date" name="check_out" id="check_out" class="form-control" min="{{ today }}" required>
+          </div>
+        </div>
+
+        <div id="availCheck" class="avail-check" style="margin-bottom:12px;"></div>
+
+        <div style="background:var(--cream);border-radius:var(--radius-sm);padding:16px 20px;margin-bottom:20px;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:12px;color:var(--stone);margin-bottom:4px;">Duration</div>
+            <div id="nightsDisplay" style="font-weight:700;font-size:16px;">—</div>
+          </div>
+          <div>
+            <div style="font-size:12px;color:var(--stone);margin-bottom:4px;">Estimated Total</div>
+            <div id="totalDisplay" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold-dark);">—</div>
+          </div>
+        </div>
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Arrival Time</label>
+            <input type="time" name="arrival_time" class="form-control">
+          </div>
+          <div class="form-group">
+            <label>Number of Guests *</label>
+            <input type="number" name="guests" class="form-control" min="1" max="20" value="1" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Special Requests / Notes</label>
+          <textarea name="special_requests" class="form-control" rows="4" placeholder="Dietary restrictions, room preferences, special occasions..."></textarea>
+        </div>
+
+        <div class="info-box mb-24">
+          <i class="fas fa-info-circle"></i>
+          <div>Your reservation will be submitted as <strong>Pending</strong> and confirmed by our team shortly. You'll receive a booking reference immediately.</div>
+        </div>
+
+        <button type="submit" class="btn btn-gold btn-full btn-lg"><i class="fas fa-calendar-check"></i> Confirm Reservation</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Room Summary -->
+  <div>
+    <div class="card" style="position:sticky;top:80px;">
+      <div style="height:180px;overflow:hidden;">
+        <img src="{{ url_for('static', filename='uploads/rooms/' + room.image) }}"
+          alt="{{ room.room_name }}" style="width:100%;height:100%;object-fit:cover;"
+          onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80'">
+      </div>
+      <div class="card-body">
+        <div style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--stone);margin-bottom:6px;">{{ room.room_type }}</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:6px;">{{ room.room_name }}</div>
+        <div style="font-size:13px;color:var(--stone);margin-bottom:16px;">Room {{ room.room_number }}</div>
+        <div class="room-card-price">
+          <span class="room-price-amount">₱{{ "%.2f"|format(room.price) }}</span>
+          <span class="room-price-per">/night</span>
+        </div>
+        <hr class="divider">
+        <div class="room-amenities">
+          {% for a in room.get_amenities_list()[:6] %}
+            <span class="amenity-tag"><i class="fas fa-check"></i>{{ a }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

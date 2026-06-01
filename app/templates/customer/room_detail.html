@@ -1,0 +1,91 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}{{ room.room_name }}{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('customer.browse_rooms') }}">Rooms</a>
+      <span class="sep">/</span>
+      <span>{{ room.room_name }}</span>
+    </div>
+    <h1>{{ room.room_name }}</h1>
+  </div>
+  <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:28px;align-items:start;">
+  <div>
+    <!-- Hero Image -->
+    <div style="border-radius:var(--radius);overflow:hidden;height:380px;margin-bottom:24px;position:relative;">
+      <img src="{{ url_for('static', filename='uploads/rooms/' + room.image) }}"
+        alt="{{ room.room_name }}" style="width:100%;height:100%;object-fit:cover;"
+        onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&q=80'">
+      <div style="position:absolute;top:16px;left:16px;">
+        <span style="background:rgba(26,24,20,.75);backdrop-filter:blur(8px);color:var(--gold);font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:6px 14px;border-radius:20px;">{{ room.room_type }}</span>
+      </div>
+      <div style="position:absolute;top:16px;right:16px;">
+        {% if room.availability %}
+          <span class="badge badge-available">Available</span>
+        {% else %}
+          <span class="badge badge-occupied">Not Available</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="card mb-24">
+      <div class="card-header"><div class="card-title">About This Room</div></div>
+      <div class="card-body">
+        <p style="color:var(--stone);line-height:1.8;">{{ room.description }}</p>
+        <div class="detail-grid mt-24">
+          <div class="detail-item"><div class="detail-label">Room Number</div><div class="detail-value">{{ room.room_number }}</div></div>
+          <div class="detail-item"><div class="detail-label">Room Type</div><div class="detail-value">{{ room.room_type }}</div></div>
+          <div class="detail-item"><div class="detail-label">Price Per Night</div><div class="detail-value" style="font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;color:var(--gold-dark);">₱{{ "%.2f"|format(room.price) }}</div></div>
+          <div class="detail-item"><div class="detail-label">Availability</div><div class="detail-value">
+            <span class="badge badge-{{ 'available' if room.availability else 'occupied' }}">{{ 'Available' if room.availability else 'Not Available' }}</span>
+          </div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Amenities -->
+    <div class="card">
+      <div class="card-header"><div class="card-title">Amenities</div></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          {% for amenity in room.get_amenities_list() %}
+          <div style="display:flex;align-items:center;gap:10px;font-size:14px;">
+            <i class="fas fa-check-circle" style="color:var(--success);"></i>{{ amenity }}
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Booking Panel -->
+  <div class="card" style="position:sticky;top:80px;">
+    <div class="card-body">
+      <div style="font-family:'Cormorant Garamond',serif;font-size:28px;font-weight:700;color:var(--charcoal);">
+        ₱{{ "%.2f"|format(room.price) }}<span style="font-size:16px;color:var(--stone);font-weight:400;">/night</span>
+      </div>
+      <hr class="divider">
+      {% if room.availability %}
+      <a href="{{ url_for('customer.book_room', room_id=room.id) }}" class="btn btn-gold btn-full btn-lg mb-16">
+        <i class="fas fa-calendar-plus"></i> Book This Room
+      </a>
+      <p style="text-align:center;font-size:12px;color:var(--stone);">No credit card required to reserve</p>
+      {% else %}
+      <div class="warn-box mb-16"><i class="fas fa-exclamation-triangle"></i> This room is currently not available for booking.</div>
+      {% endif %}
+      <hr class="divider">
+      <div style="font-size:13px;color:var(--stone);">
+        <div class="d-flex align-center gap-8 mb-8"><i class="fas fa-shield-halved" style="color:var(--gold);"></i> Secure reservation system</div>
+        <div class="d-flex align-center gap-8 mb-8"><i class="fas fa-clock" style="color:var(--gold);"></i> Real-time availability check</div>
+        <div class="d-flex align-center gap-8"><i class="fas fa-bell" style="color:var(--gold);"></i> Instant booking confirmation</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

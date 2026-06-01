@@ -1,0 +1,91 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}Booking Confirmed{% endblock %}
+{% block customer_content %}
+
+<div style="max-width:620px;margin:0 auto;">
+  <div style="text-align:center;margin-bottom:32px;">
+    <div style="width:72px;height:72px;background:var(--success-light);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:32px;color:var(--success);">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h1 style="font-size:34px;color:var(--charcoal);margin-bottom:8px;">Booking Submitted!</h1>
+    <p style="color:var(--stone);font-size:16px;">Your reservation has been received and is pending confirmation.</p>
+  </div>
+
+  <div class="receipt-card">
+    <div class="receipt-header">
+      <div class="logo">Luxe<span>Stay</span></div>
+      <div class="booking-ref">Booking Reference: <span>{{ res.booking_reference() }}</span></div>
+    </div>
+
+    <div style="background:var(--warning-light);text-align:center;padding:14px;display:flex;align-items:center;justify-content:center;gap:10px;">
+      <i class="fas fa-clock" style="color:var(--warning);"></i>
+      <span style="font-size:14px;font-weight:600;color:var(--warning);">Status: Pending Confirmation</span>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-row">
+        <div class="receipt-label">Guest Name</div>
+        <div class="receipt-value">{{ res.fullname }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Email</div>
+        <div class="receipt-value">{{ res.email }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Phone</div>
+        <div class="receipt-value">{{ res.phone }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Room</div>
+        <div class="receipt-value">{{ res.room.room_name }} (Rm. {{ res.room.room_number }})</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Check-in</div>
+        <div class="receipt-value">{{ res.check_in.strftime('%A, %B %d, %Y') }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Check-out</div>
+        <div class="receipt-value">{{ res.check_out.strftime('%A, %B %d, %Y') }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Duration</div>
+        <div class="receipt-value">{{ res.nights() }} night{{ 's' if res.nights() != 1 }}</div>
+      </div>
+      <div class="receipt-row">
+        <div class="receipt-label">Guests</div>
+        <div class="receipt-value">{{ res.guests }} person{{ 's' if res.guests != 1 }}</div>
+      </div>
+      {% if res.arrival_time %}
+      <div class="receipt-row">
+        <div class="receipt-label">Arrival Time</div>
+        <div class="receipt-value">{{ res.arrival_time }}</div>
+      </div>
+      {% endif %}
+      {% if res.special_requests %}
+      <div class="receipt-row">
+        <div class="receipt-label">Special Requests</div>
+        <div class="receipt-value">{{ res.special_requests }}</div>
+      </div>
+      {% endif %}
+      <div class="receipt-total">
+        <div class="label">Estimated Total</div>
+        <div class="amount">₱{{ "%.2f"|format(res.total_price()) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex gap-12 justify-center mt-32 flex-wrap">
+    <button class="btn btn-outline" id="printReceipt"><i class="fas fa-print"></i> Print Receipt</button>
+    <a href="{{ url_for('customer.my_reservations') }}" class="btn btn-outline"><i class="fas fa-list"></i> My Reservations</a>
+    <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-gold"><i class="fas fa-search"></i> Browse More Rooms</a>
+  </div>
+</div>
+
+<style>
+@media print {
+  .sidebar, .topbar, .page-header, .d-flex.gap-12.justify-center { display: none !important; }
+  .main-content { margin-left: 0 !important; }
+  .receipt-card { box-shadow: none; border: 1px solid #ddd; }
+}
+</style>
+{% endblock %}

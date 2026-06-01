@@ -1,0 +1,109 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}Welcome, {{ current_user.fullname.split()[0] }}{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Welcome, {{ current_user.fullname.split()[0] }}</h1>
+    <p>Find your perfect room and book your next stay.</p>
+  </div>
+  <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-gold"><i class="fas fa-search"></i> Browse All Rooms</a>
+</div>
+
+<!-- Quick stats -->
+{% set total_b = my_reservations|length %}
+{% set confirmed_b = my_reservations|selectattr('status','equalto','confirmed')|list|length %}
+<div class="stats-grid" style="grid-template-columns:repeat(3,1fr);">
+  <div class="stat-card gold">
+    <div class="stat-icon"><i class="fas fa-calendar-alt"></i></div>
+    <div class="stat-value">{{ my_reservations|length }}</div>
+    <div class="stat-label">Recent Bookings</div>
+  </div>
+  <div class="stat-card green">
+    <div class="stat-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="stat-value">{{ my_reservations|selectattr('status','equalto','confirmed')|list|length }}</div>
+    <div class="stat-label">Confirmed</div>
+  </div>
+  <div class="stat-card amber">
+    <div class="stat-icon"><i class="fas fa-clock"></i></div>
+    <div class="stat-value">{{ my_reservations|selectattr('status','equalto','pending')|list|length }}</div>
+    <div class="stat-label">Pending</div>
+  </div>
+</div>
+
+<!-- Featured Rooms -->
+<div class="section-title">Available Rooms</div>
+{% if rooms %}
+<div class="rooms-grid">
+  {% for room in rooms[:6] %}
+  <div class="room-card">
+    <div class="room-card-image">
+      <img src="{{ url_for('static', filename='uploads/rooms/' + room.image) }}"
+           alt="{{ room.room_name }}"
+           onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80'">
+      <div class="room-type-badge">{{ room.room_type }}</div>
+      <div class="room-status"><span class="badge badge-available">Available</span></div>
+    </div>
+    <div class="room-card-body">
+      <div class="room-card-name">{{ room.room_name }}</div>
+      <div class="room-card-desc">{{ room.description }}</div>
+      <div class="room-card-price">
+        <span class="room-price-amount">₱{{ "%.2f"|format(room.price) }}</span>
+        <span class="room-price-per">/night</span>
+      </div>
+      <div class="room-amenities">
+        {% for a in room.get_amenities_list()[:3] %}
+          <span class="amenity-tag"><i class="fas fa-check"></i>{{ a }}</span>
+        {% endfor %}
+      </div>
+      <div class="room-card-footer">
+        <a href="{{ url_for('customer.room_detail', room_id=room.id) }}" class="btn btn-outline btn-sm" style="flex:1;justify-content:center;">View Details</a>
+        <a href="{{ url_for('customer.book_room', room_id=room.id) }}" class="btn btn-gold btn-sm" style="flex:1;justify-content:center;"><i class="fas fa-calendar-plus"></i> Book</a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% if rooms|length > 6 %}
+<div class="text-center mt-24">
+  <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-outline btn-lg">View All Rooms</a>
+</div>
+{% endif %}
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-door-open"></i>
+  <h3>No Rooms Available</h3>
+  <p>Please check back later.</p>
+</div>
+{% endif %}
+
+<!-- Recent Reservations -->
+{% if my_reservations %}
+<div class="section-title mt-32">My Recent Reservations</div>
+<div class="card">
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Reference</th><th>Room</th><th>Check-in</th><th>Check-out</th><th>Total</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for res in my_reservations %}
+        <tr>
+          <td><strong style="color:var(--gold-dark);">{{ res.booking_reference() }}</strong></td>
+          <td>{{ res.room.room_name }}</td>
+          <td>{{ res.check_in.strftime('%b %d, %Y') }}</td>
+          <td>{{ res.check_out.strftime('%b %d, %Y') }}</td>
+          <td><strong>₱{{ "%.2f"|format(res.total_price()) }}</strong></td>
+          <td><span class="badge badge-{{ res.status }}">{{ res.status }}</span></td>
+          <td><a href="{{ url_for('customer.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-sm">View</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer">
+    <a href="{{ url_for('customer.my_reservations') }}" class="btn btn-outline btn-sm">View All My Reservations</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

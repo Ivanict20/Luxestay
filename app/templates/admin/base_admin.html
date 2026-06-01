@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+  <!-- Sidebar Overlay (mobile) -->
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;"
+    onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none'"></div>
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-gem"></i></div>
+        <div>
+          <div class="logo-name">Luxe<span>Stay</span></div>
+          <div class="sidebar-role">Admin Portal</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Overview</div>
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-link {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+          <i class="fas fa-chart-pie"></i> Dashboard
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Management</div>
+        <a href="{{ url_for('admin.rooms') }}" class="nav-link {% if 'room' in request.endpoint %}active{% endif %}">
+          <i class="fas fa-door-open"></i> Room Management
+        </a>
+        <a href="{{ url_for('admin.reservations') }}" class="nav-link {% if 'reservation' in request.endpoint and request.endpoint != 'admin.dashboard' %}active{% endif %}">
+          <i class="fas fa-calendar-check"></i> Reservations
+          <span class="nav-badge" id="pendingBadge" style="display:none">0</span>
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ current_user.fullname[0] }}</div>
+        <div class="sidebar-user-info">
+          <div class="name">{{ current_user.fullname }}</div>
+          <div class="email">{{ current_user.email }}</div>
+        </div>
+      </div>
+      <form action="{{ url_for('auth.logout') }}" method="GET">
+        <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="d-flex align-center gap-12">
+        <button class="hamburger" id="hamburger" onclick="
+          var s=document.getElementById('sidebar');
+          var o=document.getElementById('sidebarOverlay');
+          s.classList.toggle('open');
+          o.style.display=s.classList.contains('open')?'block':'none';">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      </div>
+      <div class="topbar-actions">
+        <div style="position:relative;">
+          <button class="notification-btn" id="notifBtn" title="Notifications">
+            <i class="fas fa-bell"></i>
+            <span class="notif-count" id="notifCount" style="display:none">0</span>
+          </button>
+          <div class="notif-dropdown" id="notifDropdown">
+            <div class="notif-dropdown-header"><i class="fas fa-bell" style="color:var(--gold);margin-right:8px;"></i>Pending Bookings</div>
+            <div id="notifList"><div class="notif-empty">Loading...</div></div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-content">
+      {% block admin_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update pending badge
+fetch('/admin/api/notifications').then(r=>r.json()).then(data=>{
+  var b=document.getElementById('pendingBadge');
+  if(b && data.count>0){b.textContent=data.count;b.style.display='flex';}
+}).catch(()=>{});
+</script>
+{% endblock %}

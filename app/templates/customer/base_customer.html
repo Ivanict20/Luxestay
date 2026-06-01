@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="app-layout">
+  <div id="sidebarOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:99;"
+    onclick="document.getElementById('sidebar').classList.remove('open');this.style.display='none'"></div>
+
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-icon"><i class="fas fa-gem"></i></div>
+        <div>
+          <div class="logo-name">Luxe<span>Stay</span></div>
+          <div class="sidebar-role">Guest Portal</div>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Explore</div>
+        <a href="{{ url_for('customer.dashboard') }}" class="nav-link {% if request.endpoint == 'customer.dashboard' %}active{% endif %}">
+          <i class="fas fa-home"></i> Home
+        </a>
+        <a href="{{ url_for('customer.browse_rooms') }}" class="nav-link {% if request.endpoint in ['customer.browse_rooms','customer.room_detail'] %}active{% endif %}">
+          <i class="fas fa-door-open"></i> Browse Rooms
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">My Bookings</div>
+        <a href="{{ url_for('customer.my_reservations') }}" class="nav-link {% if 'reservation' in request.endpoint and request.endpoint != 'customer.dashboard' %}active{% endif %}">
+          <i class="fas fa-calendar-check"></i> My Reservations
+        </a>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">
+        <div class="sidebar-avatar">{{ current_user.fullname[0] }}</div>
+        <div class="sidebar-user-info">
+          <div class="name">{{ current_user.fullname }}</div>
+          <div class="email">{{ current_user.email }}</div>
+        </div>
+      </div>
+      <form action="{{ url_for('auth.logout') }}" method="GET">
+        <button type="submit" class="btn-logout"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+      </form>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <header class="topbar">
+      <div class="d-flex align-center gap-12">
+        <button class="hamburger" onclick="
+          var s=document.getElementById('sidebar');
+          var o=document.getElementById('sidebarOverlay');
+          s.classList.toggle('open');
+          o.style.display=s.classList.contains('open')?'block':'none';">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">{% block page_title %}Dashboard{% endblock %}</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-gold btn-sm"><i class="fas fa-plus"></i> Book a Room</a>
+      </div>
+    </header>
+
+    <div class="page-content">
+      {% block customer_content %}{% endblock %}
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}Reservation Detail{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('admin.reservations') }}">Reservations</a>
+      <span class="sep">/</span>
+      <span>{{ res.booking_reference() }}</span>
+    </div>
+    <h1>{{ res.booking_reference() }}</h1>
+  </div>
+  <div class="d-flex gap-8">
+    <a href="{{ url_for('admin.edit_reservation', res_id=res.id) }}" class="btn btn-outline"><i class="fas fa-edit"></i> Edit</a>
+    {% if res.status == 'pending' %}
+    <form method="POST" action="{{ url_for('admin.confirm_reservation', res_id=res.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-success"><i class="fas fa-check"></i> Confirm</button>
+    </form>
+    {% endif %}
+    {% if res.status != 'cancelled' %}
+    <form method="POST" action="{{ url_for('admin.cancel_reservation', res_id=res.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-warning" data-confirm="Cancel this reservation?"><i class="fas fa-ban"></i> Cancel</button>
+    </form>
+    {% endif %}
+    <form method="POST" action="{{ url_for('admin.delete_reservation', res_id=res.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button class="btn btn-danger" data-confirm="Permanently delete this reservation?"><i class="fas fa-trash"></i> Delete</button>
+    </form>
+  </div>
+</div>
+
+<div style="display:grid;grid-template-columns:1fr 360px;gap:24px;align-items:start;">
+  <div>
+    <!-- Guest Info -->
+    <div class="card mb-24">
+      <div class="card-header"><div class="card-title"><i class="fas fa-user" style="color:var(--gold);margin-right:10px;"></i>Guest Information</div></div>
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">Full Name</div><div class="detail-value">{{ res.fullname }}</div></div>
+          <div class="detail-item"><div class="detail-label">Email</div><div class="detail-value">{{ res.email }}</div></div>
+          <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value">{{ res.phone }}</div></div>
+          <div class="detail-item"><div class="detail-label">Guests</div><div class="detail-value">{{ res.guests }} person{{ 's' if res.guests != 1 }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Booking Info -->
+    <div class="card mb-24">
+      <div class="card-header"><div class="card-title"><i class="fas fa-calendar" style="color:var(--gold);margin-right:10px;"></i>Booking Details</div></div>
+      <div class="card-body">
+        <div class="detail-grid">
+          <div class="detail-item"><div class="detail-label">Check-in</div><div class="detail-value">{{ res.check_in.strftime('%A, %B %d, %Y') }}</div></div>
+          <div class="detail-item"><div class="detail-label">Check-out</div><div class="detail-value">{{ res.check_out.strftime('%A, %B %d, %Y') }}</div></div>
+          <div class="detail-item"><div class="detail-label">Duration</div><div class="detail-value">{{ res.nights() }} night{{ 's' if res.nights() != 1 }}</div></div>
+          <div class="detail-item"><div class="detail-label">Arrival Time</div><div class="detail-value">{{ res.arrival_time or 'Not specified' }}</div></div>
+          <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value"><span class="badge badge-{{ res.status }}">{{ res.status }}</span></div></div>
+          <div class="detail-item"><div class="detail-label">Total Amount</div><div class="detail-value" style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--gold-dark);">₱{{ "%.2f"|format(res.total_price()) }}</div></div>
+        </div>
+        {% if res.special_requests %}
+        <div class="detail-item mt-16">
+          <div class="detail-label">Special Requests</div>
+          <div class="detail-value" style="background:var(--cream);padding:14px;border-radius:var(--radius-sm);margin-top:6px;">{{ res.special_requests }}</div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div style="font-size:12px;color:var(--stone);">
+      Booked: {{ res.created_at.strftime('%B %d, %Y at %I:%M %p') }}
+    </div>
+  </div>
+
+  <!-- Room Panel -->
+  <div class="card">
+    <div class="room-card-image" style="height:180px;">
+      <img src="{{ url_for('static', filename='uploads/rooms/' + res.room.image) }}"
+        alt="{{ res.room.room_name }}" style="width:100%;height:100%;object-fit:cover;"
+        onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80'">
+    </div>
+    <div class="card-body">
+      <div style="font-size:11px;color:var(--stone);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">{{ res.room.room_type }}</div>
+      <div style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:600;margin-bottom:8px;">{{ res.room.room_name }}</div>
+      <div style="font-size:13px;color:var(--stone);margin-bottom:12px;">Room {{ res.room.room_number }}</div>
+      <div class="room-card-price">
+        <span class="room-price-amount">₱{{ "%.2f"|format(res.room.price) }}</span>
+        <span class="room-price-per">/night</span>
+      </div>
+      <hr class="divider">
+      <div class="room-amenities">
+        {% for a in res.room.get_amenities_list() %}
+          <span class="amenity-tag"><i class="fas fa-check"></i>{{ a }}</span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends "customer/base_customer.html" %}
+{% block page_title %}My Reservations{% endblock %}
+{% block customer_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>My Reservations</h1>
+    <p>{{ reservations|length }} reservation{{ 's' if reservations|length != 1 }}</p>
+  </div>
+  <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-gold"><i class="fas fa-plus"></i> New Booking</a>
+</div>
+
+<div class="filter-bar">
+  <div class="filter-tabs">
+    <a href="{{ url_for('customer.my_reservations') }}" class="filter-tab {% if not status_filter %}active{% endif %}">All</a>
+    <a href="{{ url_for('customer.my_reservations', status='pending') }}" class="filter-tab {% if status_filter == 'pending' %}active{% endif %}">Pending</a>
+    <a href="{{ url_for('customer.my_reservations', status='confirmed') }}" class="filter-tab {% if status_filter == 'confirmed' %}active{% endif %}">Confirmed</a>
+    <a href="{{ url_for('customer.my_reservations', status='cancelled') }}" class="filter-tab {% if status_filter == 'cancelled' %}active{% endif %}">Cancelled</a>
+  </div>
+</div>
+
+{% if reservations %}
+<div style="display:flex;flex-direction:column;gap:16px;">
+  {% for res in reservations %}
+  <div class="card" style="transition:box-shadow .2s;">
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:120px 1fr auto;gap:20px;align-items:center;">
+        <div style="border-radius:var(--radius-sm);overflow:hidden;height:90px;">
+          <img src="{{ url_for('static', filename='uploads/rooms/' + res.room.image) }}"
+            alt="{{ res.room.room_name }}" style="width:100%;height:100%;object-fit:cover;"
+            onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=200&q=80'">
+        </div>
+        <div>
+          <div class="d-flex align-center gap-12 mb-8">
+            <strong style="color:var(--gold-dark);font-size:13px;">{{ res.booking_reference() }}</strong>
+            <span class="badge badge-{{ res.status }}">{{ res.status }}</span>
+          </div>
+          <div style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:600;margin-bottom:6px;">{{ res.room.room_name }}</div>
+          <div style="display:flex;gap:20px;font-size:13px;color:var(--stone);flex-wrap:wrap;">
+            <span><i class="fas fa-calendar-arrow-up" style="margin-right:5px;"></i>{{ res.check_in.strftime('%b %d, %Y') }}</span>
+            <span><i class="fas fa-arrow-right" style="margin-right:5px;"></i>{{ res.check_out.strftime('%b %d, %Y') }}</span>
+            <span><i class="fas fa-moon" style="margin-right:5px;"></i>{{ res.nights() }} night{{ 's' if res.nights() != 1 }}</span>
+            <span><i class="fas fa-users" style="margin-right:5px;"></i>{{ res.guests }} guest{{ 's' if res.guests != 1 }}</span>
+          </div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:700;color:var(--charcoal);margin-bottom:12px;">₱{{ "%.2f"|format(res.total_price()) }}</div>
+          <div class="d-flex gap-8 justify-end flex-wrap">
+            <a href="{{ url_for('customer.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-sm">View</a>
+            {% if res.status != 'cancelled' %}
+            <a href="{{ url_for('customer.edit_reservation', res_id=res.id) }}" class="btn btn-outline btn-sm"><i class="fas fa-edit"></i></a>
+            <form method="POST" action="{{ url_for('customer.cancel_reservation', res_id=res.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <button class="btn btn-danger btn-sm" data-confirm="Cancel this reservation?"><i class="fas fa-times"></i></button>
+            </form>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-calendar-times"></i>
+  <h3>No Reservations Found</h3>
+  <p>{% if status_filter %}No {{ status_filter }} reservations.{% else %}You haven't made any reservations yet.{% endif %}</p>
+  <a href="{{ url_for('customer.browse_rooms') }}" class="btn btn-gold mt-16"><i class="fas fa-search"></i> Browse Rooms</a>
+</div>
+{% endif %}
+{% endblock %}

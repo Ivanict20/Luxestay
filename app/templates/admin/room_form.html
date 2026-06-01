@@ -1,0 +1,201 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}{{ 'Edit Room' if room else 'Add New Room' }}{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('admin.rooms') }}">Rooms</a>
+      <span class="sep">/</span>
+      <span>{{ 'Edit: ' + room.room_name if room else 'Add New Room' }}</span>
+    </div>
+    <h1>{{ 'Edit Room' if room else 'Add New Room' }}</h1>
+  </div>
+  <a href="{{ url_for('admin.rooms') }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<!-- ONE single form wrapping EVERYTHING including the image upload -->
+<form method="POST" enctype="multipart/form-data" id="roomForm"
+  action="{{ url_for('admin.edit_room', room_id=room.id) if room else url_for('admin.add_room') }}">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+  <div style="display:grid;grid-template-columns:1fr 380px;gap:24px;align-items:start;">
+
+    <!-- LEFT: Room Info -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Room Information</div>
+      </div>
+      <div class="card-body">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Room Number *</label>
+            <input type="text" name="room_number" class="form-control"
+              value="{{ room.room_number if room else '' }}"
+              {{ 'readonly style=background:#f5f3ef' if room else '' }}
+              required placeholder="e.g. 101">
+          </div>
+          <div class="form-group">
+            <label>Room Type *</label>
+            <select name="room_type" class="form-control" required>
+              {% for t in ['Standard','Deluxe','Suite','Presidential','Family'] %}
+              <option value="{{ t }}" {{ 'selected' if room and room.room_type == t else '' }}>{{ t }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Room Name *</label>
+          <input type="text" name="room_name" class="form-control"
+            value="{{ room.room_name if room else '' }}"
+            required placeholder="e.g. Deluxe Double Room">
+        </div>
+
+        <div class="form-group">
+          <label>Price Per Night (₱) *</label>
+          <input type="number" name="price" class="form-control" step="0.01" min="0"
+            value="{{ room.price if room else '' }}" required placeholder="0.00">
+        </div>
+
+        <div class="form-group">
+          <label>Description</label>
+          <textarea name="description" class="form-control" rows="4"
+            placeholder="Describe the room...">{{ room.description if room else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Amenities <span style="font-weight:400;text-transform:none;letter-spacing:0;">(comma-separated)</span></label>
+          <textarea name="amenities" class="form-control" rows="3"
+            placeholder="Free WiFi, Air Conditioning, King Bed, Mini Bar...">{{ room.amenities if room else '' }}</textarea>
+        </div>
+
+        <div class="form-group">
+          <label>Availability</label>
+          <div class="toggle-group">
+            <label class="toggle">
+              <input type="checkbox" name="availability" id="availToggle"
+                {{ 'checked' if not room or room.availability else '' }}>
+              <span class="toggle-slider"></span>
+            </label>
+            <span id="availLabel" style="font-size:14px;font-weight:500;">
+              {{ 'Available' if not room or room.availability else 'Not Available' }}
+            </span>
+          </div>
+        </div>
+
+        <div class="d-flex gap-12 mt-24">
+          <button type="submit" class="btn btn-gold btn-lg">
+            <i class="fas fa-save"></i> {{ 'Update Room' if room else 'Add Room' }}
+          </button>
+          <a href="{{ url_for('admin.rooms') }}" class="btn btn-outline btn-lg">Cancel</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Image Upload (INSIDE the same form) -->
+    <div>
+      <div class="card">
+        <div class="card-header"><div class="card-title">Room Image</div></div>
+        <div class="card-body">
+
+          <!-- Current image display -->
+          <div id="currentImageWrap" style="{{ 'display:block' if room and room.image and room.image != 'default_room.jpg' else 'display:none' }};margin-bottom:14px;">
+            <p style="font-size:12px;color:var(--stone);margin-bottom:8px;font-weight:600;">Current Image:</p>
+            <img id="currentImage"
+              src="{{ url_for('static', filename='uploads/rooms/' + room.image) if room and room.image else '' }}"
+              alt="Current Room"
+              style="width:100%;border-radius:var(--radius-sm);max-height:200px;object-fit:cover;"
+              onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=400&q=80'">
+          </div>
+
+          <!-- Upload area — clicking this triggers the file input INSIDE this same form -->
+          <div class="image-upload-area" id="uploadArea"
+            style="cursor:pointer;"
+            onclick="document.getElementById('imageInput').click()">
+            <i class="fas fa-cloud-upload-alt" style="font-size:32px;color:var(--stone-light);display:block;margin-bottom:10px;"></i>
+            <p style="font-weight:600;color:var(--charcoal);margin-bottom:4px;">
+              {{ 'Click to replace image' if room else 'Click to upload image' }}
+            </p>
+            <p style="font-size:12px;color:var(--stone-light);">PNG, JPG, WEBP — max 16MB</p>
+          </div>
+
+          <!-- The actual file input — INSIDE this same <form> tag -->
+          <input type="file" id="imageInput" name="image" accept="image/*" style="display:none;">
+
+          <!-- Preview of newly selected image -->
+          <div id="imagePreview" style="display:none;margin-top:14px;">
+            <p style="font-size:12px;color:var(--success);font-weight:600;margin-bottom:8px;">
+              <i class="fas fa-check-circle"></i> New image selected (will save when you click Save):
+            </p>
+            <img id="previewImg" src="" alt="New Preview"
+              style="width:100%;border-radius:var(--radius-sm);max-height:200px;object-fit:cover;">
+          </div>
+
+          <p style="margin-top:12px;font-size:12px;color:var(--stone);">
+            <i class="fas fa-info-circle"></i>
+            Select an image then click <strong>{{ 'Update Room' if room else 'Add Room' }}</strong> to save it.
+          </p>
+        </div>
+      </div>
+
+      <div class="card mt-16">
+        <div class="card-header"><div class="card-title">Room Types Guide</div></div>
+        <div class="card-body" style="font-size:13px;color:var(--stone);">
+          <div style="margin-bottom:10px;"><strong style="color:var(--charcoal);">Standard</strong> — Basic amenities, budget-friendly</div>
+          <div style="margin-bottom:10px;"><strong style="color:var(--charcoal);">Deluxe</strong> — Enhanced amenities, great views</div>
+          <div style="margin-bottom:10px;"><strong style="color:var(--charcoal);">Suite</strong> — Separate living area, premium</div>
+          <div style="margin-bottom:10px;"><strong style="color:var(--charcoal);">Presidential</strong> — Ultimate luxury experience</div>
+          <div><strong style="color:var(--charcoal);">Family</strong> — Child-friendly, extra space</div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- end grid -->
+</form><!-- end single form -->
+
+<script>
+  // Toggle label
+  const toggle = document.getElementById('availToggle');
+  const label  = document.getElementById('availLabel');
+  if (toggle) toggle.addEventListener('change', () => {
+    label.textContent = toggle.checked ? 'Available' : 'Not Available';
+  });
+
+  // Image preview when user selects a file
+  const imageInput   = document.getElementById('imageInput');
+  const imagePreview = document.getElementById('imagePreview');
+  const previewImg   = document.getElementById('previewImg');
+  const uploadArea   = document.getElementById('uploadArea');
+
+  imageInput.addEventListener('change', function () {
+    if (this.files && this.files[0]) {
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewImg.src = e.target.result;
+        imagePreview.style.display = 'block';
+        // Dim the upload area to show a file is chosen
+        uploadArea.style.borderColor = 'var(--success)';
+        uploadArea.style.background  = 'rgba(46,125,82,0.04)';
+      };
+      reader.readAsDataURL(this.files[0]);
+    }
+  });
+
+  // Drag & drop support
+  uploadArea.addEventListener('dragover',  e => { e.preventDefault(); uploadArea.style.borderColor = 'var(--gold)'; });
+  uploadArea.addEventListener('dragleave', () => { uploadArea.style.borderColor = ''; });
+  uploadArea.addEventListener('drop', e => {
+    e.preventDefault();
+    uploadArea.style.borderColor = '';
+    if (e.dataTransfer.files[0]) {
+      // Assign dropped file to the input
+      const dt = new DataTransfer();
+      dt.items.add(e.dataTransfer.files[0]);
+      imageInput.files = dt.files;
+      imageInput.dispatchEvent(new Event('change'));
+    }
+  });
+</script>
+{% endblock %}

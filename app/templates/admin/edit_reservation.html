@@ -1,0 +1,82 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}Edit Reservation{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <div class="breadcrumb">
+      <a href="{{ url_for('admin.reservations') }}">Reservations</a>
+      <span class="sep">/</span>
+      <a href="{{ url_for('admin.reservation_detail', res_id=res.id) }}">{{ res.booking_reference() }}</a>
+      <span class="sep">/</span>
+      <span>Edit</span>
+    </div>
+    <h1>Edit Reservation</h1>
+  </div>
+  <a href="{{ url_for('admin.reservation_detail', res_id=res.id) }}" class="btn btn-outline"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div style="max-width:800px;">
+  <div class="card">
+    <div class="card-header"><div class="card-title">Edit Booking — {{ res.booking_reference() }}</div></div>
+    <div class="card-body">
+      <form method="POST" action="{{ url_for('admin.edit_reservation', res_id=res.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" id="room_id_hidden" value="{{ res.room_id }}">
+
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" name="fullname" class="form-control" value="{{ res.fullname }}" required>
+          </div>
+          <div class="form-group">
+            <label>Phone *</label>
+            <input type="tel" name="phone" class="form-control" value="{{ res.phone }}" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Email *</label>
+          <input type="email" name="email" class="form-control" value="{{ res.email }}" required>
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label>Check-in Date *</label>
+            <input type="date" name="check_in" id="check_in" class="form-control" value="{{ res.check_in.isoformat() }}" required>
+          </div>
+          <div class="form-group">
+            <label>Check-out Date *</label>
+            <input type="date" name="check_out" id="check_out" class="form-control" value="{{ res.check_out.isoformat() }}" required>
+          </div>
+        </div>
+        <div id="availCheck" class="avail-check"></div>
+        <div class="form-row cols-2 mt-16">
+          <div class="form-group">
+            <label>Arrival Time</label>
+            <input type="time" name="arrival_time" class="form-control" value="{{ res.arrival_time or '' }}">
+          </div>
+          <div class="form-group">
+            <label>Guests</label>
+            <input type="number" name="guests" class="form-control" min="1" max="20" value="{{ res.guests }}">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Status</label>
+          <select name="status" class="form-control">
+            {% for s in ['pending','confirmed','cancelled'] %}
+            <option value="{{ s }}" {{ 'selected' if res.status == s }}>{{ s|capitalize }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Special Requests</label>
+          <textarea name="special_requests" class="form-control">{{ res.special_requests or '' }}</textarea>
+        </div>
+        <div class="d-flex gap-12">
+          <button type="submit" class="btn btn-gold btn-lg"><i class="fas fa-save"></i> Save Changes</button>
+          <a href="{{ url_for('admin.reservation_detail', res_id=res.id) }}" class="btn btn-outline btn-lg">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

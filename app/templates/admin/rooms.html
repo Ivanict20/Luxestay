@@ -1,0 +1,69 @@
+{% extends "admin/base_admin.html" %}
+{% block page_title %}Room Management{% endblock %}
+{% block admin_content %}
+
+<div class="page-header">
+  <div class="page-header-left">
+    <h1>Room Management</h1>
+    <p>{{ rooms|length }} room{{ 's' if rooms|length != 1 }} total</p>
+  </div>
+  <a href="{{ url_for('admin.add_room') }}" class="btn btn-gold"><i class="fas fa-plus"></i> Add New Room</a>
+</div>
+
+{% if rooms %}
+<div class="rooms-grid">
+  {% for room in rooms %}
+  <div class="room-card">
+    <div class="room-card-image">
+      <img src="{{ url_for('static', filename='uploads/rooms/' + room.image) }}"
+           alt="{{ room.room_name }}"
+           onerror="this.src='https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&q=80'">
+      <div class="room-type-badge">{{ room.room_type }}</div>
+      <div class="room-status">
+        {% if room.availability %}
+          <span class="badge badge-available">Available</span>
+        {% else %}
+          <span class="badge badge-occupied">Occupied</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="room-card-body">
+      <div class="d-flex justify-between align-center mb-8">
+        <div class="room-card-name">{{ room.room_name }}</div>
+        <div style="font-size:12px;color:var(--stone);">Rm. {{ room.room_number }}</div>
+      </div>
+      <div class="room-card-price">
+        <span class="room-price-amount">₱{{ "%.2f"|format(room.price) }}</span>
+        <span class="room-price-per">/night</span>
+      </div>
+      <div class="room-amenities">
+        {% for a in room.get_amenities_list()[:4] %}
+          <span class="amenity-tag"><i class="fas fa-check"></i>{{ a }}</span>
+        {% endfor %}
+        {% if room.get_amenities_list()|length > 4 %}
+          <span class="amenity-tag">+{{ room.get_amenities_list()|length - 4 }} more</span>
+        {% endif %}
+      </div>
+      <div class="room-card-footer">
+        <a href="{{ url_for('admin.edit_room', room_id=room.id) }}" class="btn btn-outline btn-sm" style="flex:1;justify-content:center;"><i class="fas fa-edit"></i> Edit</a>
+        <form method="POST" action="{{ url_for('admin.delete_room', room_id=room.id) }}" style="flex:1;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-danger btn-sm w-100"
+            data-confirm="Delete '{{ room.room_name }}'? This cannot be undone.">
+            <i class="fas fa-trash"></i> Delete
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <i class="fas fa-door-open"></i>
+  <h3>No Rooms Added</h3>
+  <p>Start by adding your first hotel room.</p>
+  <a href="{{ url_for('admin.add_room') }}" class="btn btn-gold mt-16"><i class="fas fa-plus"></i> Add Room</a>
+</div>
+{% endif %}
+{% endblock %}
